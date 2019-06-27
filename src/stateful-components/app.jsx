@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-
+import checkCollision from "../events/check-collision";
 import Block from "../functional-components/Block.jsx";
 
 class App extends Component {
@@ -23,28 +23,28 @@ class App extends Component {
   }
 
   keyPress({keyCode}){
-    const {r, c} = this.state.hero;
+    const { hero, cells } = this.state;
+    let { r, c } = hero;
+
     switch(keyCode) {
       case 38:
-        if(r > 0) {
-          this.setState({hero:{r: r-1, c}});
-        }
+        r--;
         break;
       case 40:
-        if(r < this.state.cells.length-1) {
-          this.setState({hero:{r: r+1, c}});
-        }
+        r++;
         break;
       case 37:
-        if(c > 0) {
-          this.setState({hero:{r, c: c-1}});
-        }
+        c--;
         break;
       case 39:
-        if(c < this.state.cells[0].length-1) {
-          this.setState({hero:{r, c: c+1}});
-        }
+        c++;
         break;
+    }
+
+    const isColliding = checkCollision({r,c}, cells);
+    
+    if(!isColliding) {
+      this.setState({ hero:{ r, c } });
     }
   }
 
