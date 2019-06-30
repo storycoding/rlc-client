@@ -1,55 +1,61 @@
 import React, { Component } from "react";
-import checkCollision from "../events/check-collision";
 import Block from "../functional-components/Block.jsx";
+import checkDirection from "../events/check-direction";
+
+const baseUrl = process.env.BASE_URL || "http://localhost:3000";
 
 class App extends Component {
   constructor() {
     super();
-    this.state = {
-      cells: [
-        ["w","w","d","w","w"],
-        ["f","f","f","f","f"],
-        ["f","f","f","f","f"],
-        ["f","f","f","f","f"],
-        ["f","f","f","f","f"],
-      ],
-      hero: {
-        r:1,
-        c:0,
-      },
-    };
+    this.state = {};
 
     this.keyPress = this.keyPress.bind(this);
+    this.refresh = this.refresh.bind(this);
   }
 
   keyPress({keyCode}){
-    const { hero, cells } = this.state;
-    let { r, c } = hero;
+    let direction = checkDirection(keyCode);
+    const endpoint = "/move";
+    const queryString = `?direction=${direction}`;
+    const url = baseUrl + endpoint + queryString;
 
-    switch(keyCode) {
-      case 38:
-        r--;
-        break;
-      case 40:
-        r++;
-        break;
-      case 37:
-        c--;
-        break;
-      case 39:
-        c++;
-        break;
-    }
+    fetch(url, {
+      method: 'POST',
+      headers:{
+        'Content-Type': 'application/json'
+      }
+    }).then(res => res.json())
+    .then(response => {
+      console.log('Success:', JSON.stringify(response));
+      this.refresh();
+    })
+    .catch(error => console.error('Error:', error));
+  }
 
-    const isColliding = checkCollision({r,c}, cells);
-    
-    if(!isColliding) {
-      this.setState({ hero:{ r, c } });
-    }
+  refresh() {
+    const endpoint = "/game";
+    const url = baseUrl + endpoint;
+
+    fetch(url)
+      .then( res => res.json())
+      .then( newState => {
+        if(JSON.stringify(this.state) !== JSON.stringify(newState)) {
+          this.setState(newState);
+        }
+      })
+  }
+
+  componentDidMount() {
+    this.refresh();
+    setInterval( () => {
+      this.refresh();
+    }, 1000);
   }
 
   render() {
-    console.log(this.state.hero);
+    if(!this.state.grid) {
+      return <div className="loading">Loading...</div>
+    }
     const heroStyle = {
       gridColumn: `${this.state.hero.c+1}`,
       gridRow: `${this.state.hero.r+1}`,
@@ -57,10 +63,10 @@ class App extends Component {
     return (
       <div id="container" onKeyDown={this.keyPress} tabIndex="0">
         <div id="sprite" style={heroStyle}></div>
-        {this.state.cells.map( (row, rIndex) => {
+        {this.state.grid.map( (row, rIndex) => {
           return row.map( (cell, cIndex) => (
             <Block
-              key={rIndex + '.' + cIndex}
+              key={`tile_${rIndex}.${cIndex}`}
               tile={cell}
               rIndex={rIndex}
               cIndex={cIndex}

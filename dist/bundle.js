@@ -14775,7 +14775,7 @@ var possibleStandardNames = {
   autosave: 'autoSave',
   capture: 'capture',
   cellpadding: 'cellPadding',
-  cellspacing: 'cellSpacing',
+  gridpacing: 'gridpacing',
   challenge: 'challenge',
   charset: 'charSet',
   checked: 'checked',
