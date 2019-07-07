@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import Block from "../functional-components/Block.jsx";
 import checkDirection from "../events/check-direction";
+import api from "../events/api";
 
 const baseUrl = process.env.BASE_URL || "http://localhost:3000";
 
@@ -13,36 +14,17 @@ class App extends Component {
     this.refresh = this.refresh.bind(this);
   }
 
-  keyPress({keyCode}){
+  async keyPress({keyCode}){
     let direction = checkDirection(keyCode);
-    const endpoint = "/move";
-    const queryString = `?direction=${direction}`;
-    const url = baseUrl + endpoint + queryString;
-
-    fetch(url, {
-      method: 'POST',
-      headers:{
-        'Content-Type': 'application/json'
-      }
-    }).then(res => res.json())
-    .then(response => {
-      console.log('Success:', JSON.stringify(response));
-      this.refresh();
-    })
-    .catch(error => console.error('Error:', error));
+    await api.postDirection(baseUrl, direction);
+    this.refresh();
   }
 
-  refresh() {
-    const endpoint = "/game";
-    const url = baseUrl + endpoint;
-
-    fetch(url)
-      .then( res => res.json())
-      .then( newState => {
-        if(JSON.stringify(this.state) !== JSON.stringify(newState)) {
-          this.setState(newState);
-        }
-      })
+  async refresh() {
+    const newState = await api.getGameState(baseUrl);
+    if(JSON.stringify(this.state) !== JSON.stringify(newState)) {
+      this.setState(newState); // could be a problem if return type is invalid
+    }
   }
 
   componentDidMount() {
